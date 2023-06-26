@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This model has been renamed to 'Renamedclass' during introspection, because the original name 'class' is reserved.
+model Renamedclass {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String               @db.VarChar(255)
+  start_time         DateTime             @db.Timestamp(6)
+  end_time           DateTime             @db.Timestamp(6)
+  gym_id             String               @db.Uuid
+  created_at         DateTime             @default(now()) @db.Timestamp(6)
+  updated_at         DateTime             @default(now()) @db.Timestamp(6)
+  gym                gym                  @relation(fields: [gym_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  class_registration class_registration[]
+
+  @@map("class")
+}
+
+model class_registration {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id      String       @db.Uuid
+  class_id     String       @db.Uuid
+  created_at   DateTime     @default(now()) @db.Timestamp(6)
+  updated_at   DateTime     @default(now()) @db.Timestamp(6)
+  Renamedclass Renamedclass @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user         user         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model equipment {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String   @db.VarChar(255)
+  last_maintenance DateTime @db.Date
+  gym_id           String   @db.Uuid
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+  updated_at       DateTime @default(now()) @db.Timestamp(6)
+  gym              gym      @relation(fields: [gym_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model exercise {
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String       @db.VarChar(255)
+  sets            Int
+  reps            Int
+  workout_plan_id String       @db.Uuid
+  created_at      DateTime     @default(now()) @db.Timestamp(6)
+  updated_at      DateTime     @default(now()) @db.Timestamp(6)
+  workout_plan    workout_plan @relation(fields: [workout_plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model gym {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  description  String?        @db.VarChar(255)
+  image        String?        @db.VarChar(255)
+  name         String         @db.VarChar(255)
+  created_at   DateTime       @default(now()) @db.Timestamp(6)
+  updated_at   DateTime       @default(now()) @db.Timestamp(6)
+  user_id      String         @db.Uuid
+  tenant_id    String         @db.VarChar(255)
+  Renamedclass Renamedclass[]
+  equipment    equipment[]
+  user         user           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  membership   membership[]
+}
+
+model membership {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  start_date DateTime @db.Date
+  end_date   DateTime @db.Date
+  user_id    String   @db.Uuid
+  gym_id     String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @db.Timestamp(6)
+  gym        gym      @relation(fields: [gym_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user       user     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email              String               @unique @db.VarChar(255)
+  firstName          String?              @db.VarChar(255)
+  lastName           String?              @db.VarChar(255)
+  roq_user_id        String               @db.VarChar(255)
+  tenant_id          String               @db.VarChar(255)
+  created_at         DateTime             @default(now()) @db.Timestamp(6)
+  updated_at         DateTime             @default(now()) @db.Timestamp(6)
+  class_registration class_registration[]
+  gym                gym[]
+  membership         membership[]
+  workout_plan       workout_plan[]
+}
+
+model workout_plan {
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String     @db.VarChar(255)
+  user_id    String     @db.Uuid
+  created_at DateTime   @default(now()) @db.Timestamp(6)
+  updated_at DateTime   @default(now()) @db.Timestamp(6)
+  exercise   exercise[]
+  user       user       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
